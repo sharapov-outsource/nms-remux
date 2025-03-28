@@ -44,6 +44,16 @@ nms.on('postPublish', (id, streamPath, args) => {
     if (streamPath === '/live/original') {
         console.log('[Original Stream] Original feed detected.');
         // Custom logic for the original feed
+
+        // Kill any active FFmpeg process before starting a new one
+        if (ffmpegProcess) {
+            console.log('[FFmpeg] Terminating active FFmpeg process...');
+            ffmpegProcess.kill();
+        }
+
+        // Start FFmpeg to mix audio
+        ffmpegProcess = spawnFFmpegWithoutTranslator();
+
     } else if (streamPath === '/live/translator') {
         console.log('[Translator Stream] Translator feed detected.');
 
@@ -58,7 +68,7 @@ nms.on('postPublish', (id, streamPath, args) => {
     }
 });
 
-let ffmpegState = null; // Tracks the current state of FFmpeg ('original', 'translator', or null)
+//let ffmpegState = null; // Tracks the current state of FFmpeg ('original', 'translator', or null)
 
 // Handles stream stoppage events
 nms.on('donePublish', (id, streamPath, args) => {
@@ -85,7 +95,7 @@ nms.on('donePublish', (id, streamPath, args) => {
             console.log('[FFmpeg] Stopping active FFmpeg process...');
             ffmpegProcess.kill();
             ffmpegProcess = null;
-            ffmpegState = null; // Clear FFmpeg state
+            //ffmpegState = null; // Clear FFmpeg state
             console.log('[FFmpeg] All streams stopped due to original feed stoppage.');
         }
     } else if (streamPath === '/live/translator') {
@@ -93,7 +103,7 @@ nms.on('donePublish', (id, streamPath, args) => {
 
         isTranslatorActive = false;
 
-        if (ffmpegState === 'translator' && ffmpegProcess) {
+        //if (/*ffmpegState === 'translator' && */ffmpegProcess) {
             console.log('[FFmpeg] Stopping translator FFmpeg process...');
             ffmpegProcess.kill();
 
@@ -101,11 +111,11 @@ nms.on('donePublish', (id, streamPath, args) => {
             ffmpegProcess.on('close', () => {
                 console.log('[FFmpeg] Translator feed process stopped. Restarting for original...');
                 ffmpegProcess = spawnFFmpegWithoutTranslator(); // Restart FFmpeg without translator
-                ffmpegState = 'original'; // Update FFmpeg state
+               // ffmpegState = 'original'; // Update FFmpeg state
             });
-        } else {
-            console.log('[FFmpeg] No translator process to stop, or already running original stream.');
-        }
+        //} else {
+        //    console.log('[FFmpeg] No translator process to stop, or already running original stream.');
+        //}
     }
 });
 
