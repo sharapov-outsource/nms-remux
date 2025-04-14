@@ -1,5 +1,7 @@
 const NodeMediaServer = require('node-media-server');
 const { spawn } = require('child_process');
+const fs = require("fs");
+const path = require("path");
 
 const config = {
     rtmp: {
@@ -15,11 +17,18 @@ const config = {
     },
 };
 
+const loadStreams = () => {
+    // Reload the config file freshly, bypassing node cache
+    delete require.cache[require.resolve('./config.json')];
+    return require('./config.json');
+};
+
+let streams = loadStreams();
 const nms = new NodeMediaServer(config);
 
-const targetRTMP = 'rtmp://127.0.0.1:1935/live/test';
-const sourceVideoAudio = 'rtmp://127.0.0.1:1935/live/original';
-const sourceTranslatorAudio = 'rtmp://127.0.0.1:1935/live/translator';
+const targetRTMP = streams.targetRTMP;
+const sourceVideoAudio = streams.sourceVideoAudio;
+const sourceTranslatorAudio = streams.sourceTranslatorAudio;
 
 let ffmpegProcess = null;
 let isTranslatorActive = false;
